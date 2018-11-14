@@ -56,6 +56,7 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -65,6 +66,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_CAN_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -104,15 +106,45 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USB_DEVICE_Init();
+//  MX_USB_DEVICE_Init();
+  MX_CAN_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+ // char data[] = "HELLO WORLD";
+ // CDC_Transmit_FS(data,strlen(data));
+
+
+  //send can bus massage
+
+
+  CanTxMsgTypeDef canTXbuff;
+
+canTXbuff.DLC = 8;
+canTXbuff.IDE = CAN_ID_STD;
+canTXbuff.RTR = CAN_RTR_DATA;
+canTXbuff.StdId = 0x400;
+
+canTXbuff.Data[0] = 'E';
+canTXbuff.Data[1] = 'L';
+canTXbuff.Data[2] = 'I';
+canTXbuff.Data[3] = 'K';
+canTXbuff.Data[4] = 'B';
+canTXbuff.Data[5] = 'E';
+canTXbuff.Data[6] = 'L';
+canTXbuff.Data[7] = 'I';
+
+hcan.pTxMsg = &canTXbuff;
+if(HAL_CAN_Transmit(&hcan,1000) != HAL_OK)
+	_Error_Handler(__FILE__, __LINE__);
+
+
   while (1)
   {
+
 
   /* USER CODE END WHILE */
 
@@ -181,6 +213,29 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
+/* CAN init function */
+static void MX_CAN_Init(void)
+{
+
+  hcan.Instance = CAN1;
+  hcan.Init.Prescaler = 16;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SJW = CAN_SJW_1TQ;
+  hcan.Init.BS1 = CAN_BS1_1TQ;
+  hcan.Init.BS2 = CAN_BS2_1TQ;
+  hcan.Init.TTCM = DISABLE;
+  hcan.Init.ABOM = DISABLE;
+  hcan.Init.AWUM = DISABLE;
+  hcan.Init.NART = DISABLE;
+  hcan.Init.RFLM = DISABLE;
+  hcan.Init.TXFP = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /** Configure pins as 
         * Analog 
         * Input 
@@ -194,6 +249,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
 }
 
